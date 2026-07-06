@@ -97,12 +97,16 @@ async def _check_lp(bot: Bot, event: Event, matcher: Matcher, node_key: str) -> 
     return False
 
 
-# Register matcher without hard permission gate — we check inside each handler.
-CLP = on_command("lp", aliases={"luckperms"}, block=True)
+CLP = None
 
 
-@CLP.handle()
-async def _(bot: Bot, event: Event, matcher: Matcher, arg=CommandArg()):
+def register_admin_commands():
+    global CLP
+    CLP = on_command("lp", aliases={"luckperms"}, block=True)
+    CLP.handle()(_handler)
+
+
+async def _handler(bot: Bot, event: Event, matcher: Matcher, arg=CommandArg()):
     store = get_store()
     if store is None:
         return

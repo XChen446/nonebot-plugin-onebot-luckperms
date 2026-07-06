@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from nonebot.plugin import PluginMetadata
 
@@ -9,6 +8,7 @@ from .core.context_provider import register_context_provider, ContextProvider
 from .storage import get_store
 from .adapter import set_resolver, require, require_any, require_all, get_context
 from .adapter.context import LPContext
+from .config import oblp_config
 
 logger = logging.getLogger("oblp")
 
@@ -41,11 +41,6 @@ __all__ = [
 ]
 
 _store_initialized = False
-_global_config = None
-
-
-def get_runtime_config():
-    return _global_config
 
 
 def _register_builtin_nodes():
@@ -81,46 +76,42 @@ def _register_builtin_nodes():
     register_node("luckperms.group.list", "List all groups", default=False)
 
 
-# Register built-in permission nodes for all LP commands
 _register_builtin_nodes()
 
 
 async def _init():
-    global _store_initialized, _global_config
+    global _store_initialized
 
     if _store_initialized:
         return
 
     from nonebot import get_plugin_config
-    from .config import OBLPConfig, oblp_config as module_config
+    from .config import OBLPConfig
     from .storage import init_store
     from .adapter.identity import set_resolver as _set_resolver, OneBotV11Resolver
     from .commands import register_admin_commands
+    from .message import load_messages, _export_defaults
 
-    _global_config = get_plugin_config(OBLPConfig)
+    config = get_plugin_config(OBLPConfig)
 
-    from pydantic import BaseModel
-    for field in _global_config.model_fields:
-        setattr(module_config, field, getattr(_global_config, field))
+    for field in config.model_fields:
+        setattr(oblp_config, field, getattr(config, field))
 
-    store_type = module_config.store_type
+    store_type = oblp_config.store_type
     kwargs = {}
     if store_type == "sqlite":
-        kwargs["db_path"] = module_config.sqlite_path
+        kwargs["db_path"] = oblp_config.sqlite_path
     elif store_type == "redis":
-        kwargs["redis_url"] = module_config.redis_url
+        kwargs["redis_url"] = oblp_config.redis_url
 
     store = init_store(store_type, **kwargs)
     await store.load_all()
     _set_resolver(OneBotV11Resolver())
     register_admin_commands()
 
-    from .message import load_messages, export_defaults
-
-    msg_path = module_config.message_file
-    load_messages(msg_path)
+    load_messages(oblp_config.message_file)
     try:
-        export_defaults(msg_path)
+        _export_defaults(oblp_config.message_file)
     except Exception:
         pass
 
