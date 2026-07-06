@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 
 class OBLPConfig(BaseModel):
-    model_config = ConfigDict(env_prefix="OBLP_", extra="ignore")
+    model_config = ConfigDict(extra="ignore")
 
     store_type: Literal["memory", "sqlite", "redis"] = "sqlite"
     sqlite_path: str = "./data/oblp/permissions.db"

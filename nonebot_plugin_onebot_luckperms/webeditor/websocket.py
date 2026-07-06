@@ -95,10 +95,11 @@ class BytesocksClient:
             ws_url = self.base_url
 
         url = f"{ws_url}/{self.channel}"
-        self._session = aiohttp.ClientSession()
+        session = aiohttp.ClientSession()
+        self._session = session
 
         try:
-            async with self._session.ws_connect(url) as ws:
+            async with session.ws_connect(url) as ws:
                 self._ws = ws
                 log.info("Bytesocks connected: %s", url)
 

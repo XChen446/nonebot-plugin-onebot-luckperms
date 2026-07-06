@@ -644,8 +644,8 @@ async def _cmd_parent(matcher: Matcher, store, entity_id: str, is_user: bool, ar
             await store.save_group(entity)
 
     async def _add_parent(gname: str):
-        parents = _get_parents()
-        if gname not in parents:
+        current = _get_parents()
+        if gname not in current:
             if is_user:
                 entity.groups.append(gname)
             else:

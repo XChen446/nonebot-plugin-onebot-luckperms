@@ -6,7 +6,6 @@ from nonebot_plugin_onebot_luckperms.core.registry import NodeRegistry, register
 from nonebot_plugin_onebot_luckperms.core.context_provider import (
     register_context_provider,
     DuplicateProviderError,
-    _context_providers,
     get_context_providers,
     clear_providers,
 )

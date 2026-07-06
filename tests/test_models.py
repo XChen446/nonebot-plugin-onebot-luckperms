@@ -41,9 +41,9 @@ class TestContextSet:
         assert ctx.to_dict() == d
 
     def test_matches_partial(self):
-        self = ContextSet({"group_id": "123", "role": "admin"})
+        ctx = ContextSet({"group_id": "123", "role": "admin"})
         req = ContextSet({"group_id": "123", "role": "admin"})
-        assert self.matches(req)
+        assert ctx.matches(req)
 
 
 class TestPermissionNode:

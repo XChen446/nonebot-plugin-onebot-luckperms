@@ -92,10 +92,10 @@ async def _init():
     from .commands import register_admin_commands
     from .message import load_messages, _export_defaults
 
-    config = get_plugin_config(OBLPConfig)
+    raw_cfg = get_plugin_config(OBLPConfig)
 
-    for field in config.model_fields:
-        setattr(oblp_config, field, getattr(config, field))
+    for field in raw_cfg.model_fields:
+        setattr(oblp_config, field, getattr(raw_cfg, field))
 
     store_type = oblp_config.store_type
     kwargs = {}

@@ -33,14 +33,15 @@ class WebEditorSession:
         if self._socks is not None:
             await self.close()
 
-        self._socks = BytesocksClient(
+        socks = BytesocksClient(
             base_url=self.bytesocks_url or DEFAULT_BYTESOCKS_URL,
             on_hello=self._on_hello,
             on_connected=self._on_connected,
             on_change_request=self._on_change_request,
         )
-        self._channel = await self._socks.create_channel()
-        await self._socks.start()
+        self._socks = socks
+        self._channel = await socks.create_channel()
+        await socks.start()
 
         payload = self.get_payload()
         payload["socket"] = {
@@ -71,10 +72,12 @@ class WebEditorSession:
         self.apply_changes(payload)
         log.info("Edits applied")
 
-    async def _on_hello(self, nonce: str) -> None:
+    @staticmethod
+    async def _on_hello(nonce: str) -> None:
         log.debug("Web Editor handshake: nonce=%s", nonce)
 
-    async def _on_connected(self) -> None:
+    @staticmethod
+    async def _on_connected() -> None:
         log.info("Web Editor frontend connected")
 
     async def _on_change_request(self, code: str) -> None:

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from nonebot_plugin_onebot_luckperms.webeditor.bytebin import BytebinClient
 from nonebot_plugin_onebot_luckperms.webeditor.websocket import BytesocksClient
 from nonebot_plugin_onebot_luckperms.webeditor.session import WebEditorSession
-from nonebot_plugin_onebot_luckperms.webeditor.manager import _node_to_webeditor, _node_from_webeditor
+from nonebot_plugin_onebot_luckperms.webeditor.manager import node_to_webeditor, node_from_webeditor
 from nonebot_plugin_onebot_luckperms.core.models import PermissionNode, ContextSet
 
 
@@ -140,41 +140,41 @@ class TestWebEditorSession:
 class TestWebEditorNodeConversion:
     def test_node_to_webeditor_basic(self):
         node = PermissionNode(key="test.node", value=True)
-        result = _node_to_webeditor(node)
+        result = node_to_webeditor(node)
         assert result["key"] == "test.node"
         assert result["value"] is True
         assert result["type"] == "permission"
 
     def test_node_to_webeditor_with_context(self):
         node = PermissionNode(key="test.node", value=False, contexts=ContextSet({"group_id": "123"}))
-        result = _node_to_webeditor(node)
+        result = node_to_webeditor(node)
         assert result["context"] == {"group_id": ["123"]}
 
     def test_node_to_webeditor_with_expiry(self):
         node = PermissionNode(key="test.node", value=True, expiry=1234567890)
-        result = _node_to_webeditor(node)
+        result = node_to_webeditor(node)
         assert result["expiry"] == 1234567890
 
     def test_node_from_webeditor_basic(self):
         data = {"key": "test.node", "value": True}
-        node = _node_from_webeditor(data)
+        node = node_from_webeditor(data)
         assert node.key == "test.node"
         assert node.value is True
 
     def test_node_from_webeditor_with_context(self):
         data = {"key": "test.node", "value": False, "context": {"group_id": ["123"]}}
-        node = _node_from_webeditor(data)
+        node = node_from_webeditor(data)
         assert node.value is False
         assert node.contexts.data == {"group_id": "123"}
 
     def test_node_from_webeditor_string_value(self):
         data = {"key": "test", "value": "true"}
-        node = _node_from_webeditor(data)
+        node = node_from_webeditor(data)
         assert node.value is True
 
     def test_node_roundtrip(self):
         original = PermissionNode(key="a.b", value=False, contexts=ContextSet({"x": "y"}), expiry=9999999999)
-        converted = _node_from_webeditor(_node_to_webeditor(original))
+        converted = node_from_webeditor(node_to_webeditor(original))
         assert converted.key == original.key
         assert converted.value == original.value
         assert converted.contexts.data == original.contexts.data

@@ -11,7 +11,7 @@ from ..storage import get_store, PermissionStore
 log = logging.getLogger("oblp.webeditor")
 
 
-def _node_to_webeditor(node: PermissionNode) -> dict[str, Any]:
+def node_to_webeditor(node: PermissionNode) -> dict[str, Any]:
     d: dict[str, Any] = {
         "type": "permission",
         "key": node.key,
@@ -25,7 +25,7 @@ def _node_to_webeditor(node: PermissionNode) -> dict[str, Any]:
     return d
 
 
-def _node_from_webeditor(data: dict[str, Any]) -> PermissionNode:
+def node_from_webeditor(data: dict[str, Any]) -> PermissionNode:
     expiry = data.get("expiry")
     raw_ctx = data.get("context", {})
     flat_ctx: dict[str, str] = {}
@@ -79,7 +79,7 @@ async def to_webeditor_payload(extra_user_ids: list[str] | None = None) -> dict[
             "type": "group",
             "id": g.name,
             "displayName": g.display_name or g.name,
-            "nodes": [_node_to_webeditor(n) for n in g.nodes if not n.is_expired()],
+            "nodes": [node_to_webeditor(n) for n in g.nodes if not n.is_expired()],
             "parents": list(g.parents),
         }
         permission_holders.append(holder)
@@ -96,7 +96,7 @@ async def to_webeditor_payload(extra_user_ids: list[str] | None = None) -> dict[
             "type": "user",
             "id": u.user_id,
             "displayName": u.username or u.user_id,
-            "nodes": [_node_to_webeditor(n) for n in u.nodes if not n.is_expired()],
+            "nodes": [node_to_webeditor(n) for n in u.nodes if not n.is_expired()],
             "parents": list(u.groups),
         }
         permission_holders.append(holder)
@@ -113,7 +113,7 @@ async def to_webeditor_payload(extra_user_ids: list[str] | None = None) -> dict[
                     "type": "user",
                     "id": u.user_id,
                     "displayName": u.username or u.user_id,
-                    "nodes": [_node_to_webeditor(n) for n in u.nodes if not n.is_expired()],
+                    "nodes": [node_to_webeditor(n) for n in u.nodes if not n.is_expired()],
                     "parents": list(u.groups),
                 }
             else:
@@ -174,7 +174,7 @@ async def _apply_delta_changes(store: PermissionStore, payload: dict[str, Any]):
         if not ctype or not cid:
             continue
 
-        nodes = [_node_from_webeditor(n) for n in change.get("nodes", [])]
+        nodes = [node_from_webeditor(n) for n in change.get("nodes", [])]
 
         if ctype == "group":
             g = Group(
@@ -204,7 +204,7 @@ async def _apply_full_changes(store: PermissionStore, payload: dict[str, Any]):
     holders = payload.get("permissionHolders", [])
 
     for h in holders:
-        nodes = [_node_from_webeditor(n) for n in h.get("nodes", [])]
+        nodes = [node_from_webeditor(n) for n in h.get("nodes", [])]
 
         if h.get("type") == "group":
             g = Group(
