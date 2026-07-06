@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Runtime data (created on startup)
+data/oblp/*.db*
+
+# Keep the messages template but ignore user edits in tracked copy
+# (users get their own copy at runtime via OBLP_MESSAGE_FILE)
+# data/oblp/messages.yml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Pytest
+.pytest_cache/
+.cache/
+htmlcov/
+.coverage
