@@ -1,0 +1,52 @@
+name: pr
+
+on:
+  pull_request:
+    branches: ["*"]
+
+# PR 工作流零凭证：阻止恶意依赖窃取环境变量
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip (PR-isolated)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: >
+            pr-${{ runner.os }}-${{ matrix.python-version }}-
+            ${{ github.event.pull_request.number }}-
+            ${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            pr-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[all]
+
+      - name: Lint (syntax check)
+        run: |
+          python -m py_compile nonebot_plugin_onebot_luckperms/__init__.py
+          python -m py_compile nonebot_plugin_onebot_luckperms/core/engine.py
+          python -m py_compile nonebot_plugin_onebot_luckperms/storage/sqlite.py
+          python -m py_compile nonebot_plugin_onebot_luckperms/webeditor/session.py
+
+      - name: Import check
+        run: python -c "from nonebot_plugin_onebot_luckperms import oblp_config, register_node, require, register_context_provider; print('imports OK')"
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short

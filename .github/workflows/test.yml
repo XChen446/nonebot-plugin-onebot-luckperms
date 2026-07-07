@@ -1,0 +1,88 @@
+name: test
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+  workflow_dispatch:
+
+# 仅持有 artifact 上传与 test-reporter 所需的最小写权限。
+# 不含任何运行时凭证（PYPI_TOKEN 等），恶意依赖无法窃取。
+permissions:
+  contents: read
+  actions: write
+  checks: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # ── 缓存键防投毒 ──
+      # PR:  绑定 PR number，PR 间隔离
+      # push:绑定分支名，同分支共享
+      # tag: 绑定 tag 名
+      # + pyproject.toml 哈希确保依赖变更时自动失效
+      - name: Compute cache salt
+        id: cache-salt
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          BRANCH_REF="${{ github.ref_name }}"
+          SALT="${PR_NUMBER:-$BRANCH_REF}"
+          echo "salt=${SALT}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: >
+            pip-${{ runner.os }}-${{ matrix.python-version }}-
+            ${{ steps.cache-salt.outputs.salt }}-
+            ${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[all]
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short --junitxml=report.xml
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ matrix.python-version }}
+          path: report.xml
+
+      - name: Report test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: report.xml
+          reporter: java-junit
+
+  # publish.yml 通过 workflow_run 监听本工作流的 conclusion。
+  # 无需 artifact 传递——conclusion="success" 即是测试通过信号。
+  results:
+    if: ${{ always() }}
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "test matrix result: ${{ needs.test.result }}"
+          test "${{ needs.test.result }}" = "success" || exit 1

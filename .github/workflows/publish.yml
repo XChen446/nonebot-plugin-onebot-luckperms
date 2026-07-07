@@ -1,0 +1,107 @@
+name: publish
+
+on:
+  workflow_run:
+    workflows: ["test"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      publish_target:
+        description: "Publish target"
+        required: true
+        default: "none"
+        type: choice
+        options:
+          - PYPI
+          - test PYPI
+          - none
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      # ── Determine publish target ──
+      - name: Resolve publish target
+        id: resolve
+        run: |
+          TARGET=""
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT="${{ github.event.inputs.publish_target }}"
+            if [ "$INPUT" = "PYPI" ]; then
+              TARGET="pypi"
+            elif [ "$INPUT" = "test PYPI" ]; then
+              TARGET="testpypi"
+            fi
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            # Only publish on tag pushes that passed tests
+            EVENT="${{ github.event.workflow_run.event }}"
+            CONCLUSION="${{ github.event.workflow_run.conclusion }}"
+            HEAD_BRANCH="${{ github.event.workflow_run.head_branch }}"
+
+            if [ "$CONCLUSION" = "success" ] && echo "$HEAD_BRANCH" | grep -Eq '^v[0-9]'; then
+              TARGET="pypi"
+            fi
+          fi
+
+          echo "target=${TARGET}" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$TARGET" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip (no target selected or conditions not met)
+        if: steps.resolve.outputs.skip == 'true'
+        run: echo "No publish target, skipping publish"
+
+      # ── Test & Build (only if we have a target) ──
+      - name: Install dependencies
+        if: steps.resolve.outputs.skip == 'false'
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[all] build twine
+
+      - name: Run tests
+        if: steps.resolve.outputs.skip == 'false'
+        run: pytest tests/ -v --tb=short --junitxml=report.xml
+
+      - name: Report test results
+        if: steps.resolve.outputs.skip == 'false'
+        uses: dorny/test-reporter@v1
+        with:
+          name: publish-test-results
+          path: report.xml
+          reporter: java-junit
+
+      - name: Build
+        if: steps.resolve.outputs.skip == 'false'
+        run: python -m build
+
+      # ── Publish ──
+      - name: Publish to PyPI
+        if: steps.resolve.outputs.target == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository-url: https://upload.pypi.org/legacy/
+
+      - name: Publish to TestPyPI
+        if: steps.resolve.outputs.target == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TESTPYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
