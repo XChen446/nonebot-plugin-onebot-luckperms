@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "LuckPerms-style permission system for NoneBot2 + OneBot"
 requires-python = ">=3.10"
 license = "MIT"
+readme = "README.md"
 dependencies = [
     "nonebot2>=2.5.0",
     "nonebot-adapter-onebot>=2.4.6",
