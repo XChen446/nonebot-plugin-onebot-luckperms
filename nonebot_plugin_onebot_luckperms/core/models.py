@@ -43,7 +43,7 @@ class PermissionNode:
     def is_expired(self) -> bool:
         if self.expiry is None:
             return False
-        return time.time() >= self.expiry
+        return time.time() > self.expiry
 
     def applies_in(self, ctx: ContextSet) -> bool:
         return ctx.matches(self.contexts)

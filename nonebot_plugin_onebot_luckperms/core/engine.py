@@ -1,10 +1,40 @@
 from __future__ import annotations
 
-import fnmatch
 from typing import Dict, List, Optional
 
 from .models import User, PermissionNode, QueryOptions, ContextSet
 from .registry import NodeRegistry
+
+
+def _match_segments(pattern: str, target: str) -> bool:
+    """Segment-based wildcard matching.
+
+    *   matches zero or more segments (multi-segment wildcard).
+    **  alias for *, identical behavior.
+    Literals must match exactly.
+
+    Per our spec, * matches "a.b" and also "a.b.c" (not single-segment).
+    """
+    pat_parts = pattern.split(".")
+    tgt_parts = target.split(".")
+    return _match_dp(pat_parts, tgt_parts)
+
+
+def _match_dp(p: list[str], t: list[str]) -> bool:
+    n, m = len(p), len(t)
+    dp = [[False] * (m + 1) for _ in range(n + 1)]
+    dp[0][0] = True
+    for i in range(1, n + 1):
+        dp[i][0] = dp[i - 1][0] if p[i - 1] in ("*", "**") else False
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            if p[i - 1] in ("*", "**"):
+                dp[i][j] = dp[i - 1][j] or dp[i][j - 1]
+            elif p[i - 1] == t[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            else:
+                dp[i][j] = False
+    return dp[n][m]
 
 
 class PermissionEngine:
@@ -21,12 +51,12 @@ class PermissionEngine:
             if parent in user_nodes and not user_nodes[parent]:
                 return False
 
-        # Stage 3: Wildcard match
+        # Stage 3: Wildcard match (segment-based)
         for pattern, value in user_nodes.items():
-            if "*" in pattern and fnmatch.fnmatch(target, pattern):
+            if "*" in pattern and _match_segments(pattern, target):
                 return value
 
-        # Stage 4: Prefix inheritance (allow only; deny already handled in stage 2)
+        # Stage 4: Prefix inheritance (allow only)
         for node_key, value in user_nodes.items():
             if value and target.startswith(node_key + "."):
                 return True
@@ -47,12 +77,12 @@ class PermissionEngine:
         current_ctx: Optional[ContextSet] = None,
     ) -> Dict[str, bool]:
         candidates: List[tuple[int, PermissionNode]] = []
+        # sort_key: user nodes = 0, group nodes = 1 + (10000 - weight)
+        # This ensures user's own nodes always beat any group-inherited node.
 
-        # Collect user's own nodes
         for node in user.nodes:
             candidates.append((0, node))
 
-        # Group inheritance
         if "include_inherited" in options.flags:
             for group_name in user.groups:
                 group = await store.get_group(group_name)
@@ -63,64 +93,53 @@ class PermissionEngine:
                 except Exception:
                     continue
                 for node in group_nodes:
-                    candidates.append((group.weight, node))
+                    sort_key = 1 + (10000 - group.weight)
+                    candidates.append((sort_key, node))
 
-        # Sort by weight descending (higher weight = higher priority)
-        candidates.sort(key=lambda x: (-x[0], 0))
-
-        # Context-aware conflict resolution.
-        # For each unique key among candidates, we collect all nodes with that key,
-        # then pick the one whose context is the BEST match for the current environment.
-        # "Best match" = the node whose context has the most matching key-value pairs.
-        # A node with no context is the least specific fallback.
+        candidates.sort(key=lambda x: x[0])
 
         ctx_for_match = options.contexts
         grouped: Dict[str, List[tuple[int, PermissionNode]]] = {}
-        for weight, node in candidates:
+        for sort_key, node in candidates:
             if node.is_expired():
                 continue
             if options.mode == "contextual" and not node.applies_in(ctx_for_match):
                 continue
-            grouped.setdefault(node.key, []).append((weight, node))
+            grouped.setdefault(node.key, []).append((sort_key, node))
 
         seen: Dict[str, bool] = {}
 
         for key, entries in grouped.items():
-            # Among all entries for this key, pick the best one:
-            # 1. Higher weight wins
-            # 2. If same weight, more context keys matched wins
             best = None
-            best_weight = None
-            best_match_count = -1
+            best_key = None
+            best_match = -1
 
-            for weight, node in entries:
-                # Count how many of this node's context keys match the current environment
+            for sort_key, node in entries:
                 if options.mode == "contextual" and not node.contexts.is_empty():
-                    match_count = sum(
+                    match_cnt = sum(
                         1 for k in node.contexts.data
                         if ctx_for_match.data.get(k) == node.contexts.data[k]
                     )
                 else:
-                    match_count = 0  # no context = lowest specificity
+                    match_cnt = 0
 
                 if best is None:
                     best = node
-                    best_weight = weight
-                    best_match_count = match_count
-                elif weight > best_weight:
+                    best_key = sort_key
+                    best_match = match_cnt
+                elif sort_key < best_key:
                     best = node
-                    best_weight = weight
-                    best_match_count = match_count
-                elif weight == best_weight and match_count > best_match_count:
+                    best_key = sort_key
+                    best_match = match_cnt
+                elif sort_key == best_key and match_cnt > best_match:
                     best = node
-                    best_match_count = match_count
+                    best_match = match_cnt
 
             if best is not None:
                 seen[key] = best.value
 
-        # Apply parent deny inheritance
-        keys = list(seen.keys())
-        for key in keys:
+        # Parent deny inheritance
+        for key in list(seen.keys()):
             if not seen[key]:
                 continue
             parts = key.split(".")
@@ -130,7 +149,7 @@ class PermissionEngine:
                     del seen[key]
                     break
 
-        # Apply NodeRegistry defaults for unset nodes
+        # NodeRegistry defaults
         ctx_for_defaults = current_ctx or options.contexts
         for info in NodeRegistry.list_all():
             key = info["key"]
