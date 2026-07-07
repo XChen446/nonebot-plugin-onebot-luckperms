@@ -2,9 +2,10 @@ name: test
 
 on:
   push:
-    branches: ["*"]
+    branches: ["**"]
+    tags: ["v*"]
   pull_request:
-    branches: ["*"]
+    branches: ["**"]
   workflow_dispatch:
 
 # 仅持有 artifact 上传与 test-reporter 所需的最小写权限。

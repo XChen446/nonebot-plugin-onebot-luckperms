@@ -2,7 +2,7 @@ name: pr
 
 on:
   pull_request:
-    branches: ["*"]
+    branches: ["**"]
 
 # PR 工作流零凭证：阻止恶意依赖窃取环境变量
 permissions: {}
