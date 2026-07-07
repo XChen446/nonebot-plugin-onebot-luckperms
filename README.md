@@ -21,14 +21,16 @@ LuckPerms 风格的权限节点管理系统，专为 NoneBot2 + OneBot 适配器
 
 ## 安装
 
+### 通过 NB-CLI（推荐）
+
 ```bash
-pip install nonebot-plugin-onebot-luckperms
+nb plugin install nonebot-plugin-onebot-luckperms
 ```
 
-如需 SQLite 后端（默认）：
+### 通过 pip
 
 ```bash
-pip install nonebot-plugin-onebot-luckperms[sqlite]
+pip install nonebot-plugin-onebot-luckperms
 ```
 
 如需 Redis 后端：
@@ -101,7 +103,7 @@ plugins = ["nonebot_plugin_onebot_luckperms"]
 | `OBLP_STORE_TYPE` | `sqlite` | 存储后端：`memory` / `sqlite` / `redis` |
 | `OBLP_SQLITE_PATH` | `./data/oblp/permissions.db` | SQLite 文件路径 |
 | `OBLP_REDIS_URL` | `redis://localhost:6379/0` | Redis 连接 URL |
-| `OBLP_DEFAULT_GROUP_OWNER` | `["*"]` | 群主自动继承的权限节点（通配符） |
+| `OBLP_DEFAULT_GROUP_OWNER` | `["luckperms.help"]` | 群主自动继承的权限节点 |
 | `OBLP_DEFAULT_GROUP_ADMIN` | `[]` | 群管理自动继承的权限节点 |
 | `OBLP_DEFAULT_GROUP_MEMBER` | `[]` | 普通成员自动继承的权限节点 |
 | `OBLP_SUPERUSER_INHERIT` | `["luckperms.*"]` | SUPERUSER 自动继承的权限节点 |

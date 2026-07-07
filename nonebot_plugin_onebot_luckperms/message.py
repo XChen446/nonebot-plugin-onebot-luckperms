@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Dict, Optional
@@ -54,7 +55,7 @@ _messages: Dict[str, str] = {}
 _loaded_path: Optional[Path] = None
 
 
-def load_messages(path: Optional[str] = None):
+async def load_messages(path: Optional[str] = None):
     global _messages, _loaded_path
     _messages = dict(_DEFAULT_MESSAGES)
 
@@ -64,17 +65,17 @@ def load_messages(path: Optional[str] = None):
     p = Path(path)
 
     # If file doesn't exist, try to export defaults
-    if not p.exists():
+    if not await asyncio.to_thread(p.exists):
         try:
-            _export_defaults(str(p))
+            await _export_defaults(str(p))
             logger.info(f"Default message file created at {path}")
         except Exception as e:
             logger.warning(f"Could not create message file at {path}: {e}")
         return
 
     try:
-        with open(p, "r", encoding="utf-8") as f:
-            raw = f.read()
+        loop = asyncio.get_event_loop()
+        raw = await loop.run_in_executor(None, _read_file, p)
         if not raw.strip():
             logger.warning(f"Message file {path} is empty, using defaults")
             return
@@ -93,6 +94,11 @@ def load_messages(path: Optional[str] = None):
         logger.error(f"Failed to load message file {path}: {e}")
 
 
+def _read_file(p: Path) -> str:
+    with open(p, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def msg(key: str, **kwargs) -> str:
     template = _messages.get(key, _DEFAULT_MESSAGES.get(key, key))
     if kwargs:
@@ -104,13 +110,17 @@ def msg(key: str, **kwargs) -> str:
     return template
 
 
-def _export_defaults(path: str):
+async def _export_defaults(path: str):
     """Write default messages to a YAML file as a template for users."""
     p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
+    await asyncio.to_thread(p.parent.mkdir, parents=True, exist_ok=True)
+    await asyncio.to_thread(_write_yaml, p, _DEFAULT_MESSAGES)
+    logger.info(f"Default message template exported to {path}")
+
+
+def _write_yaml(p: Path, data: dict):
     with open(p, "w", encoding="utf-8") as f:
         yaml.dump(
-            {k: v for k, v in _DEFAULT_MESSAGES.items()},
+            data,
             f, allow_unicode=True, default_flow_style=False, sort_keys=False,
         )
-    logger.info(f"Default message template exported to {path}")

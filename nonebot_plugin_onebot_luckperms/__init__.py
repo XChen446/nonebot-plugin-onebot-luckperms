@@ -8,7 +8,7 @@ from .core.context_provider import register_context_provider, ContextProvider
 from .storage import get_store
 from .adapter import set_resolver, require, require_any, require_all, get_context
 from .adapter.context import LPContext
-from .config import oblp_config
+from .config import OBLPConfig, oblp_config
 
 logger = logging.getLogger("oblp")
 
@@ -19,8 +19,8 @@ __plugin_meta__ = PluginMetadata(
     description="LuckPerms-style permission system for NoneBot2 + OneBot",
     usage="Register nodes with register_node(), use require() in command matchers",
     type="library",
-    homepage="https://github.com/your/nonebot-plugin-onebot-luckperms",
-    config=None,
+    homepage="https://github.com/XChen446/nonebot-plugin-onebot-luckperms",
+    config=OBLPConfig,
     supported_adapters={"~onebot.v11"},
 )
 
@@ -109,9 +109,9 @@ async def _init():
     _set_resolver(OneBotV11Resolver())
     register_admin_commands()
 
-    load_messages(oblp_config.message_file)
+    await load_messages(oblp_config.message_file)
     try:
-        _export_defaults(oblp_config.message_file)
+        await _export_defaults(oblp_config.message_file)
     except Exception:
         pass
 

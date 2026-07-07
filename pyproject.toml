@@ -15,7 +15,7 @@ dependencies = [
 
 [project.optional-dependencies]
 redis = ["redis>=8.0"]
-test = ["pytest>=9.0"]
+test = ["pytest>=9.0", "pytest-asyncio>=1.4"]
 all = ["nonebot-plugin-onebot-luckperms[redis]", "nonebot-plugin-onebot-luckperms[test]"]
 
 [project.urls]
