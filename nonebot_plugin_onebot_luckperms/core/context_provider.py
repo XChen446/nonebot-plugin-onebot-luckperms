@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import logging
 from typing import Dict, List, Protocol
 
 from nonebot.adapters import Bot, Event
+from nonebot.log import logger
 
 from .models import ContextSet
-
-logger = logging.getLogger("oblp")
 
 
 class DuplicateProviderError(Exception):

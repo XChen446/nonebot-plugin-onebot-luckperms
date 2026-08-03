@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 from typing import Callable, Optional
 
 import aiohttp
 
-log = logging.getLogger("oblp.webeditor")
+from nonebot.log import logger
 
 DEFAULT_BYTESOCKS_URL = "https://usersockets.luckperms.net"
 
@@ -59,7 +58,7 @@ class BytesocksClient:
                     raise RuntimeError(f"Bytesocks invalid response: {await resp.text()}")
 
                 self.channel = key
-                log.info("Bytesocks channel created: %s", key)
+                logger.info("Bytesocks channel created: %s", key)
                 return key
 
     async def start(self) -> None:
@@ -101,7 +100,7 @@ class BytesocksClient:
         try:
             async with session.ws_connect(url) as ws:
                 self._ws = ws
-                log.info("Bytesocks connected: %s", url)
+                logger.info("Bytesocks connected: %s", url)
 
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.TEXT:
@@ -111,16 +110,16 @@ class BytesocksClient:
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            log.error("Bytesocks connection error: %s", e)
+            logger.error("Bytesocks connection error: %s", e)
         finally:
             self._running = False
-            log.info("Bytesocks disconnected")
+            logger.info("Bytesocks disconnected")
 
     async def _handle_message(self, data: str) -> None:
         try:
             frame = json.loads(data)
         except json.JSONDecodeError:
-            log.warning("Invalid JSON: %s", data[:200])
+            logger.warning("Invalid JSON: %s", data[:200])
             return
 
         inner_msg = frame.get("msg", "")
@@ -130,7 +129,7 @@ class BytesocksClient:
         try:
             msg = json.loads(inner_msg)
         except json.JSONDecodeError:
-            log.warning("Invalid inner message: %s", inner_msg[:200])
+            logger.warning("Invalid inner message: %s", inner_msg[:200])
             return
 
         msg_type = msg.get("type", "").lower()
@@ -142,14 +141,14 @@ class BytesocksClient:
                 try:
                     await self.on_hello(nonce)
                 except Exception:
-                    log.exception("on_hello callback error")
+                    logger.exception("on_hello callback error")
 
         elif msg_type == "connected":
             if self.on_connected:
                 try:
                     await self.on_connected()
                 except Exception:
-                    log.exception("on_connected callback error")
+                    logger.exception("on_connected callback error")
 
         elif msg_type == "change-request":
             code = msg.get("code", "")
@@ -157,7 +156,7 @@ class BytesocksClient:
                 try:
                     await self.on_change_request(code)
                 except Exception:
-                    log.exception("on_change_request callback error")
+                    logger.exception("on_change_request callback error")
 
         elif msg_type == "ping":
             await self._send({"type": "pong"})

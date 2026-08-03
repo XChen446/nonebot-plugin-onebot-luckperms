@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import time
 import uuid
-import logging
 from typing import Any, Dict, List, Optional
+
+from nonebot.log import logger
 
 from ..core.models import User, Group, PermissionNode, ContextSet
 from ..storage import get_store, PermissionStore
-
-log = logging.getLogger("oblp.webeditor")
 
 
 def node_to_webeditor(node: PermissionNode) -> dict[str, Any]:
@@ -163,10 +162,10 @@ async def _apply_delta_changes(store: PermissionStore, payload: dict[str, Any]):
 
     for gid in group_deletions:
         await store.delete_group(gid)
-        log.info("[delta] deleted group: %s", gid)
+        logger.info("[delta] deleted group: %s", gid)
     for uid in user_deletions:
         await store.delete_user(uid)
-        log.info("[delta] deleted user: %s", uid)
+        logger.info("[delta] deleted user: %s", uid)
 
     for change in changes:
         ctype = change.get("type")
@@ -185,7 +184,7 @@ async def _apply_delta_changes(store: PermissionStore, payload: dict[str, Any]):
                 parents=change.get("parents", []),
             )
             await store.save_group(g)
-            log.debug("[delta] upserted group: %s", cid)
+            logger.debug("[delta] upserted group: %s", cid)
 
         elif ctype == "user":
             u = User(
@@ -195,9 +194,9 @@ async def _apply_delta_changes(store: PermissionStore, payload: dict[str, Any]):
                 nodes=nodes,
             )
             await store.save_user(u)
-            log.debug("[delta] upserted user: %s", cid)
+            logger.debug("[delta] upserted user: %s", cid)
 
-    log.info("[delta] applied changes")
+    logger.info("[delta] applied changes")
 
 
 async def _apply_full_changes(store: PermissionStore, payload: dict[str, Any]):
@@ -225,4 +224,4 @@ async def _apply_full_changes(store: PermissionStore, payload: dict[str, Any]):
             )
             await store.save_user(u)
 
-    log.info("[full] applied changes: %d holders", len(holders))
+    logger.info("[full] applied changes: %d holders", len(holders))

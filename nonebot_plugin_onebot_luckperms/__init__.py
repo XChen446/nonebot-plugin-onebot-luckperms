@@ -1,5 +1,4 @@
-import logging
-
+from nonebot.log import logger
 from nonebot.plugin import PluginMetadata
 
 from .core.registry import register_node
@@ -9,8 +8,6 @@ from .storage import get_store
 from .adapter import set_resolver, require, require_any, require_all, get_context
 from .adapter.context import LPContext
 from .config import OBLPConfig, oblp_config
-
-logger = logging.getLogger("oblp")
 
 __version__ = "0.1.0"
 

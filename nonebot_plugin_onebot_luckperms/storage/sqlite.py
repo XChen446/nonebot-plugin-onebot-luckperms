@@ -1,13 +1,12 @@
 import json
-import logging
 from pathlib import Path
 from typing import Optional, List, Dict
 
 import aiosqlite
 
-from ..core.models import User, Group, PermissionNode, ContextSet
+from nonebot.log import logger
 
-logger = logging.getLogger("oblp")
+from ..core.models import User, Group, PermissionNode, ContextSet
 
 
 class SQLiteStore:

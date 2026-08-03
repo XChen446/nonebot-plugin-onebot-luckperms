@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import gzip
 import json
-import logging
 from typing import Any
 
 import aiohttp
 
-log = logging.getLogger("oblp.webeditor")
+from nonebot.log import logger
 
 DEFAULT_BYTEBIN_URL = "https://usercontent.luckperms.net"
 
@@ -49,7 +48,7 @@ class BytebinClient:
 
                 if not key:
                     raise RuntimeError(f"Bytebin invalid response: {await resp.text()}")
-                log.info("Bytebin upload OK, key=%s", key)
+                logger.info("Bytebin upload OK, key=%s", key)
                 return key
 
     async def download(self, code: str) -> dict[str, Any]:

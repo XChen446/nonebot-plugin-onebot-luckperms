@@ -1,9 +1,9 @@
-import logging
 import time
 from typing import Optional
 
 from nonebot import on_command
 from nonebot.adapters import Bot, Event
+from nonebot.log import logger
 from nonebot.params import CommandArg
 from nonebot.matcher import Matcher
 
@@ -17,8 +17,6 @@ from ..adapter.identity import get_resolver, Identity
 from ..adapter.context import LPContext, set_context
 from ..config import oblp_config
 from ..message import msg
-
-logger = logging.getLogger("oblp")
 
 
 def _parse_context(args: list) -> ContextSet:

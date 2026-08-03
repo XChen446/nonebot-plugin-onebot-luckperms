@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Protocol
 
 from nonebot.adapters import Bot, Event
-
-logger = logging.getLogger("oblp")
+from nonebot.log import logger
 
 
 @dataclass

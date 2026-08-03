@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import logging
 from typing import Dict, List, Optional
 
-from .models import PermissionNode, ContextSet
+from nonebot.log import logger
 
-logger = logging.getLogger("oblp")
+from .models import PermissionNode, ContextSet
 
 
 class NodeRegistry:

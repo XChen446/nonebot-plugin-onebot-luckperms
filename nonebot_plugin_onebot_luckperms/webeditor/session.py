@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import logging
 from typing import Callable, Optional
+
+from nonebot.log import logger
 
 from .bytebin import BytebinClient
 from .websocket import BytesocksClient
-
-log = logging.getLogger("oblp.webeditor")
 
 EDITOR_BASE_URL = "https://luckperms.net/editor"
 DEFAULT_BYTESOCKS_URL = "https://usersockets.luckperms.net"
@@ -54,7 +53,7 @@ class WebEditorSession:
 
         self._closed = False
         url = f"{EDITOR_BASE_URL}/{self._code}"
-        log.info("Web Editor session opened: %s (channel=%s)", url, self._channel)
+        logger.info("Web Editor session opened: %s (channel=%s)", url, self._channel)
         return url
 
     async def close(self) -> None:
@@ -64,26 +63,26 @@ class WebEditorSession:
         if self._socks:
             await self._socks.stop()
             self._socks = None
-        log.info("Web Editor session closed")
+        logger.info("Web Editor session closed")
 
     async def apply_edits(self, code: str) -> None:
-        log.info("Downloading and applying edits: %s", code)
+        logger.info("Downloading and applying edits: %s", code)
         payload = await self.bytebin.download(code)
         self.apply_changes(payload)
-        log.info("Edits applied")
+        logger.info("Edits applied")
 
     @staticmethod
     async def _on_hello(nonce: str) -> None:
-        log.debug("Web Editor handshake: nonce=%s", nonce)
+        logger.debug("Web Editor handshake: nonce=%s", nonce)
 
     @staticmethod
     async def _on_connected() -> None:
-        log.info("Web Editor frontend connected")
+        logger.info("Web Editor frontend connected")
 
     async def _on_change_request(self, code: str) -> None:
         if self._closed or self._socks is None:
             return
-        log.info("Received change-request: code=%s", code)
+        logger.info("Received change-request: code=%s", code)
 
         try:
             await self._socks.send_change_response("accepted")
@@ -100,9 +99,9 @@ class WebEditorSession:
 
             await self._socks.send_change_response("applied", new_code)
             self._code = new_code
-            log.info("Pushed new session code: %s", new_code)
+            logger.info("Pushed new session code: %s", new_code)
         except Exception:
-            log.exception("Failed to process change-request")
+            logger.exception("Failed to process change-request")
 
     @property
     def is_active(self) -> bool:

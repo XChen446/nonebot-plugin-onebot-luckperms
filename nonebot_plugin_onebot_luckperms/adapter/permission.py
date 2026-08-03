@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import logging
 from typing import Optional, Set
 
-from nonebot.permission import Permission
 from nonebot.adapters import Bot, Event
+from nonebot.log import logger
+from nonebot.permission import Permission
 
 from ..core.models import ContextSet, QueryOptions, User, PermissionNode
 from ..core.registry import NodeRegistry
@@ -15,8 +15,6 @@ from ..config import oblp_config
 from ..storage import get_store
 from .identity import get_resolver, Identity
 from .context import LPContext, set_context
-
-logger = logging.getLogger("oblp")
 
 
 def _apply_default_nodes(user: User, identity: Identity) -> list:
@@ -134,11 +132,10 @@ def _checker_factory(
         )
         set_context(lp_ctx)
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                f"[oblp] User {identity.user_id} check {node_keys} "
-                f"in {ctx.to_dict()} -> {result}"
-            )
+        logger.debug(
+            f"[oblp] User {identity.user_id} check {node_keys} "
+            f"in {ctx.to_dict()} -> {result}"
+        )
 
         return result
 

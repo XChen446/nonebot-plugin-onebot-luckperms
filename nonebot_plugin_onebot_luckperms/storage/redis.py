@@ -1,13 +1,12 @@
 import json
-import logging
 import time
 from typing import Optional, List
 
 import redis.asyncio as aioredis
 
-from ..core.models import User, Group, PermissionNode, ContextSet
+from nonebot.log import logger
 
-logger = logging.getLogger("oblp")
+from ..core.models import User, Group, PermissionNode, ContextSet
 
 
 class RedisStore:

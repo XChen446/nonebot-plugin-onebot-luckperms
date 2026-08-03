@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from pathlib import Path
 from typing import Dict, Optional
 import yaml
 
-logger = logging.getLogger("oblp")
+from nonebot.log import logger
 
 _DEFAULT_MESSAGES: Dict[str, str] = {
     "deny": "Permission denied. You do not have the required permission node.",
