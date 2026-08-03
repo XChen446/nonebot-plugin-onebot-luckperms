@@ -7,7 +7,7 @@ from .core.context_provider import register_context_provider, ContextProvider
 from .storage import get_store
 from .adapter import set_resolver, require, require_any, require_all, get_context
 from .adapter.context import LPContext
-from .config import OBLPConfig, oblp_config
+from .config import OBLPConfig
 
 __version__ = "0.1.0"
 
@@ -30,7 +30,6 @@ __all__ = [
     "set_resolver",
     "ContextSet",
     "PermissionNode",
-    "oblp_config",
     "get_store",
     "LPContext",
     "register_context_provider",
@@ -94,16 +93,13 @@ async def _init():
 
     raw_cfg = get_plugin_config(OBLPConfig)
 
-    for field in raw_cfg.model_fields:
-        setattr(oblp_config, field, getattr(raw_cfg, field))
-
-    store_type = oblp_config.store_type
+    store_type = raw_cfg.store_type
     kwargs = {}
     if store_type == "sqlite":
         db_file = store.get_plugin_data_file("permissions.db")
         kwargs["db_path"] = str(db_file)
     elif store_type == "redis":
-        kwargs["redis_url"] = oblp_config.redis_url
+        kwargs["redis_url"] = raw_cfg.redis_url
 
     store = init_store(store_type, **kwargs)
     await store.load_all()

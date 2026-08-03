@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from typing import Dict, Optional, Tuple
 
-from ..config import oblp_config
+from ..config import OBLPConfig
 
 
 class PermissionCache:
@@ -11,7 +11,9 @@ class PermissionCache:
 
     @classmethod
     def get(cls, key: str) -> Optional[dict]:
-        ttl = oblp_config.cache_ttl
+        from nonebot import get_plugin_config
+
+        ttl = get_plugin_config(OBLPConfig).cache_ttl
         if ttl <= 0:
             return None
         entry = cls._cache.get(key)
@@ -25,7 +27,9 @@ class PermissionCache:
 
     @classmethod
     def set(cls, key: str, value: dict):
-        ttl = oblp_config.cache_ttl
+        from nonebot import get_plugin_config
+
+        ttl = get_plugin_config(OBLPConfig).cache_ttl
         if ttl <= 0:
             return
         cls._cache[key] = (time.time(), value)

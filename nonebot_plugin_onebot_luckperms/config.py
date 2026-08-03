@@ -10,7 +10,3 @@ class OBLPConfig(BaseModel):
     default_group_member: List[str] = Field(default_factory=list)
     superuser_inherit: List[str] = Field(default_factory=lambda: ["luckperms.*"])
     cache_ttl: int = 300
-    debug_mode: bool = False
-
-
-oblp_config = OBLPConfig()

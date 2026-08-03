@@ -15,7 +15,6 @@ from ..core.context_provider import get_context_providers
 from ..storage import get_store
 from ..adapter.identity import get_resolver, Identity
 from ..adapter.context import LPContext, set_context
-from ..config import oblp_config
 from ..message import msg
 
 

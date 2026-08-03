@@ -11,7 +11,7 @@ from ..core.registry import NodeRegistry
 from ..core.engine import PermissionEngine
 from ..core.cache import PermissionCache
 from ..core.context_provider import get_context_providers
-from ..config import oblp_config
+from ..config import OBLPConfig
 from ..storage import get_store
 from .identity import get_resolver, Identity
 from .context import LPContext, set_context
@@ -19,12 +19,15 @@ from .context import LPContext, set_context
 
 def _apply_default_nodes(user: User, identity: Identity) -> list:
     """Apply default permission nodes based on the user's role from config."""
+    from nonebot import get_plugin_config
+
+    cfg = get_plugin_config(OBLPConfig)
     nodes = []
     role_map = {
-        "owner": oblp_config.default_group_owner,
-        "admin": oblp_config.default_group_admin,
-        "member": oblp_config.default_group_member,
-        "superuser": oblp_config.superuser_inherit,
+        "owner": cfg.default_group_owner,
+        "admin": cfg.default_group_admin,
+        "member": cfg.default_group_member,
+        "superuser": cfg.superuser_inherit,
     }
     patterns = role_map.get(identity.role, [])
     for pattern in patterns:
