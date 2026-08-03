@@ -73,8 +73,7 @@ async def load_messages(path: Optional[str] = None):
         return
 
     try:
-        loop = asyncio.get_event_loop()
-        raw = await loop.run_in_executor(None, _read_file, p)
+        raw = await asyncio.to_thread(_read_file, p)
         if not raw.strip():
             logger.warning(f"Message file {path} is empty, using defaults")
             return
