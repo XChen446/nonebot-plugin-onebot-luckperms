@@ -99,14 +99,12 @@ Set via `.env` or environment variables (prefix `OBLP_`):
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OBLP_STORE_TYPE` | `sqlite` | Storage backend: `memory` / `sqlite` / `redis` |
-| `OBLP_SQLITE_PATH` | `./data/oblp/permissions.db` | SQLite file path |
 | `OBLP_REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL |
 | `OBLP_DEFAULT_GROUP_OWNER` | `["*"]` | Nodes auto-granted to group owners |
 | `OBLP_DEFAULT_GROUP_ADMIN` | `[]` | Nodes auto-granted to group admins |
 | `OBLP_DEFAULT_GROUP_MEMBER` | `[]` | Nodes auto-granted to regular members |
 | `OBLP_SUPERUSER_INHERIT` | `["luckperms.*"]` | Nodes auto-granted to SUPERUSER |
 | `OBLP_CACHE_TTL` | `300` | Permission cache TTL (seconds), `0` to disable |
-| `OBLP_MESSAGE_FILE` | `./data/oblp/messages.yml` | Path to custom message YAML file |
 | `OBLP_DEBUG_MODE` | `false` | Log every permission check |
 
 ### Example
@@ -114,10 +112,15 @@ Set via `.env` or environment variables (prefix `OBLP_`):
 ```ini
 SUPERUSER=123456
 OBLP_STORE_TYPE=sqlite
-OBLP_SQLITE_PATH=./data/oblp/permissions.db
 OBLP_DEFAULT_GROUP_ADMIN=["myplugin.mute","myplugin.kick"]
 OBLP_DEFAULT_GROUP_MEMBER=[]
 ```
+
+### Data Storage
+
+The SQLite database and the custom message file are stored in the data directory managed by
+`nonebot-plugin-localstore`. You can customize it with the `LOCALSTORE_*` environment variables
+(e.g. `LOCALSTORE_PLUGIN_DATA_DIR`).
 
 ---
 

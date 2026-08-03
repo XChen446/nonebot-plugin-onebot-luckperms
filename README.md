@@ -101,14 +101,12 @@ plugins = ["nonebot_plugin_onebot_luckperms"]
 | 环境变量 | 默认值 | 说明 |
 |---------|--------|------|
 | `OBLP_STORE_TYPE` | `sqlite` | 存储后端：`memory` / `sqlite` / `redis` |
-| `OBLP_SQLITE_PATH` | `./data/oblp/permissions.db` | SQLite 文件路径 |
 | `OBLP_REDIS_URL` | `redis://localhost:6379/0` | Redis 连接 URL |
 | `OBLP_DEFAULT_GROUP_OWNER` | `["luckperms.help"]` | 群主自动继承的权限节点 |
 | `OBLP_DEFAULT_GROUP_ADMIN` | `[]` | 群管理自动继承的权限节点 |
 | `OBLP_DEFAULT_GROUP_MEMBER` | `[]` | 普通成员自动继承的权限节点 |
 | `OBLP_SUPERUSER_INHERIT` | `["luckperms.*"]` | SUPERUSER 自动继承的权限节点 |
 | `OBLP_CACHE_TTL` | `300` | 权限缓存时间（秒），`0` 禁用缓存 |
-| `OBLP_MESSAGE_FILE` | `./data/oblp/messages.yml` | 自定义回复消息的 YAML 文件路径 |
 | `OBLP_DEBUG_MODE` | `false` | 开启后打印每次权限判定日志 |
 
 ### 配置示例
@@ -116,10 +114,14 @@ plugins = ["nonebot_plugin_onebot_luckperms"]
 ```ini
 SUPERUSER=123456
 OBLP_STORE_TYPE=sqlite
-OBLP_SQLITE_PATH=./data/oblp/permissions.db
 OBLP_DEFAULT_GROUP_ADMIN=["myplugin.mute","myplugin.kick"]
 OBLP_DEFAULT_GROUP_MEMBER=[]
 ```
+
+### 数据存储
+
+SQLite 数据库与自定义回复消息文件存放在 `nonebot-plugin-localstore` 管理的数据目录下（可用
+`LOCALSTORE_*` 系列环境变量自定义，例如 `LOCALSTORE_PLUGIN_DATA_DIR`）。
 
 ---
 
@@ -192,11 +194,11 @@ SUPERUSER 默认拥有 `luckperms.*`（全部权限）。群主默认拥有 `luc
 
 ### 自定义回复消息
 
-所有用户可见的回复文本均存储在 `OBLP_MESSAGE_FILE` 指向的 YAML 文件中（默认 `./data/oblp/messages.yml`）。
+所有用户可见的回复文本均存储在插件数据目录下的 `messages.yml` 文件中。
 插件首次运行时会自动生成此文件。你可以编辑它来自定义所有回复，支持占位符：
 
 ```yaml
-# data/oblp/messages.yml
+# messages.yml (位于插件数据目录)
 deny: "你没有权限执行此命令。"
 deny_hint: "请联系管理员开通对应权限节点。"
 perm_set: "{entity}: {action} {node}"

@@ -17,7 +17,7 @@ def init_store(store_type: str, **kwargs) -> PermissionStore:
     if store_type == "memory":
         _store = MemoryStore()
     elif store_type == "sqlite":
-        _store = SQLiteStore(db_path=kwargs.get("db_path", "./data/oblp/permissions.db"))
+        _store = SQLiteStore(db_path=kwargs["db_path"])
     elif store_type == "redis":
         _store = _get_redis_store(**kwargs)
     else:

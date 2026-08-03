@@ -10,7 +10,7 @@ from ..core.models import User, Group, PermissionNode, ContextSet
 
 
 class SQLiteStore:
-    def __init__(self, db_path: str = "./data/oblp/permissions.db"):
+    def __init__(self, db_path: str):
         self.db_path = db_path
         self._conn: Optional[aiosqlite.Connection] = None
 

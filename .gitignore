@@ -18,11 +18,11 @@ env/
 *.swo
 *~
 
-# Runtime data (created on startup)
+# Runtime data (created on startup via nonebot-plugin-localstore)
 data/oblp/*.db*
 
 # Keep the messages template but ignore user edits in tracked copy
-# (users get their own copy at runtime via OBLP_MESSAGE_FILE)
+# (users get their own copy at runtime via the localstore data dir)
 # data/oblp/messages.yml
 
 # OS

@@ -82,12 +82,15 @@ async def _init():
     if _store_initialized:
         return
 
-    from nonebot import get_plugin_config
+    from nonebot import require, get_plugin_config
     from .config import OBLPConfig
     from .storage import init_store
     from .adapter.identity import set_resolver as _set_resolver, OneBotV11Resolver
     from .commands import register_admin_commands
     from .message import load_messages, _export_defaults
+
+    require("nonebot_plugin_localstore")
+    import nonebot_plugin_localstore as store
 
     raw_cfg = get_plugin_config(OBLPConfig)
 
@@ -97,7 +100,8 @@ async def _init():
     store_type = oblp_config.store_type
     kwargs = {}
     if store_type == "sqlite":
-        kwargs["db_path"] = oblp_config.sqlite_path
+        db_file = store.get_plugin_data_file("permissions.db")
+        kwargs["db_path"] = str(db_file)
     elif store_type == "redis":
         kwargs["redis_url"] = oblp_config.redis_url
 
@@ -106,9 +110,10 @@ async def _init():
     _set_resolver(OneBotV11Resolver())
     register_admin_commands()
 
-    await load_messages(oblp_config.message_file)
+    message_file = str(store.get_plugin_data_file("messages.yml"))
+    await load_messages(message_file)
     try:
-        await _export_defaults(oblp_config.message_file)
+        await _export_defaults(message_file)
     except Exception:
         pass
 
