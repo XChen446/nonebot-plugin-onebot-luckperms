@@ -1,10 +1,8 @@
 from typing import List, Literal
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 
 
 class OBLPConfig(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-
     store_type: Literal["memory", "sqlite", "redis"] = "sqlite"
     sqlite_path: str = "./data/oblp/permissions.db"
     redis_url: str = "redis://localhost:6379/0"
