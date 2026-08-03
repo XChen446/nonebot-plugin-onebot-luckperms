@@ -184,7 +184,7 @@ async def _apply_delta_changes(store: PermissionStore, payload: dict[str, Any]):
                 parents=change.get("parents", []),
             )
             await store.save_group(g)
-            logger.debug("[delta] upserted group: %s", cid)
+            logger.info("[delta] upserted group: %s", cid)
 
         elif ctype == "user":
             u = User(
@@ -194,7 +194,7 @@ async def _apply_delta_changes(store: PermissionStore, payload: dict[str, Any]):
                 nodes=nodes,
             )
             await store.save_user(u)
-            logger.debug("[delta] upserted user: %s", cid)
+            logger.info("[delta] upserted user: %s", cid)
 
     logger.info("[delta] applied changes")
 

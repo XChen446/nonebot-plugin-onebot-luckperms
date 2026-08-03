@@ -105,7 +105,6 @@ Set via `.env` or environment variables (prefix `OBLP_`):
 | `OBLP_DEFAULT_GROUP_MEMBER` | `[]` | Nodes auto-granted to regular members |
 | `OBLP_SUPERUSER_INHERIT` | `["luckperms.*"]` | Nodes auto-granted to SUPERUSER |
 | `OBLP_CACHE_TTL` | `300` | Permission cache TTL (seconds), `0` to disable |
-| `OBLP_DEBUG_MODE` | `false` | Log every permission check |
 
 ### Example
 

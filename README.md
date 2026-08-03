@@ -107,7 +107,6 @@ plugins = ["nonebot_plugin_onebot_luckperms"]
 | `OBLP_DEFAULT_GROUP_MEMBER` | `[]` | 普通成员自动继承的权限节点 |
 | `OBLP_SUPERUSER_INHERIT` | `["luckperms.*"]` | SUPERUSER 自动继承的权限节点 |
 | `OBLP_CACHE_TTL` | `300` | 权限缓存时间（秒），`0` 禁用缓存 |
-| `OBLP_DEBUG_MODE` | `false` | 开启后打印每次权限判定日志 |
 
 ### 配置示例
 
