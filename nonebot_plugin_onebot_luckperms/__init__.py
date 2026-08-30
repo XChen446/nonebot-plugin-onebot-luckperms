@@ -1,15 +1,29 @@
+from nonebot import get_driver, get_plugin_config, require
 from nonebot.log import logger
 from nonebot.plugin import PluginMetadata
 
+# 依赖插件需在加载时声明：localstore 自身在导入时读取配置，
+# 此时 driver 已由 nonebot.init 初始化完毕，可以安全调用 get_plugin_config。
+require("nonebot_plugin_localstore")
+import nonebot_plugin_localstore as store
+
+from .config import OBLPConfig
 from .core.registry import register_node
 from .core.models import ContextSet, PermissionNode
 from .core.context_provider import register_context_provider, ContextProvider
 from .storage import get_store
 from .adapter import set_resolver, require, require_any, require_all, get_context
 from .adapter.context import LPContext
-from .config import OBLPConfig
 
 __version__ = "0.1.0"
+
+# 插件配置在加载时读取（而非等待 on_startup）
+plugin_config = get_plugin_config(OBLPConfig)
+
+# 数据文件路径在加载时由 localstore 确定
+# （仅创建目录，不创建文件；实际写入在初始化阶段进行）
+PLUGIN_DB_FILE = str(store.get_plugin_data_file("permissions.db"))
+PLUGIN_MESSAGE_FILE = str(store.get_plugin_data_file("messages.yml"))
 
 __plugin_meta__ = PluginMetadata(
     name="nonebot-plugin-onebot-luckperms",
@@ -81,35 +95,26 @@ async def _init():
     if _store_initialized:
         return
 
-    from nonebot import require, get_plugin_config
-    from .config import OBLPConfig
     from .storage import init_store
     from .adapter.identity import set_resolver as _set_resolver, OneBotV11Resolver
     from .commands import register_admin_commands
     from .message import load_messages, _export_defaults
 
-    require("nonebot_plugin_localstore")
-    import nonebot_plugin_localstore as store
-
-    raw_cfg = get_plugin_config(OBLPConfig)
-
-    store_type = raw_cfg.oblp_store_type
+    store_type = plugin_config.oblp_store_type
     kwargs = {}
     if store_type == "sqlite":
-        db_file = store.get_plugin_data_file("permissions.db")
-        kwargs["db_path"] = str(db_file)
+        kwargs["db_path"] = PLUGIN_DB_FILE
     elif store_type == "redis":
-        kwargs["redis_url"] = raw_cfg.oblp_redis_url
+        kwargs["redis_url"] = plugin_config.oblp_redis_url
 
-    store = init_store(store_type, **kwargs)
-    await store.load_all()
+    backend = init_store(store_type, **kwargs)
+    await backend.load_all()
     _set_resolver(OneBotV11Resolver())
     register_admin_commands()
 
-    message_file = str(store.get_plugin_data_file("messages.yml"))
-    await load_messages(message_file)
+    await load_messages(PLUGIN_MESSAGE_FILE)
     try:
-        await _export_defaults(message_file)
+        await _export_defaults(PLUGIN_MESSAGE_FILE)
     except Exception:
         pass
 
@@ -117,9 +122,5 @@ async def _init():
     logger.info(f"OBLP initialized (store: {store_type})")
 
 
-try:
-    from nonebot import get_driver
-    driver = get_driver()
-    driver.on_startup(_init)
-except (ValueError, RuntimeError, ImportError):
-    logger.debug("NoneBot not initialized, OBLP will init on first use")
+driver = get_driver()
+driver.on_startup(_init)
