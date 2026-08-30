@@ -93,13 +93,13 @@ async def _init():
 
     raw_cfg = get_plugin_config(OBLPConfig)
 
-    store_type = raw_cfg.store_type
+    store_type = raw_cfg.oblp_store_type
     kwargs = {}
     if store_type == "sqlite":
         db_file = store.get_plugin_data_file("permissions.db")
         kwargs["db_path"] = str(db_file)
     elif store_type == "redis":
-        kwargs["redis_url"] = raw_cfg.redis_url
+        kwargs["redis_url"] = raw_cfg.oblp_redis_url
 
     store = init_store(store_type, **kwargs)
     await store.load_all()

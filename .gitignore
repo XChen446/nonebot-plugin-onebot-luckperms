@@ -40,3 +40,6 @@ desktop.ini
 .cache/
 htmlcov/
 .coverage
+
+# DSH memory runtime
+.mnemon/

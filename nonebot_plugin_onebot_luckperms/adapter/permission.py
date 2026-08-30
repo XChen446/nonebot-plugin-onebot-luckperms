@@ -24,10 +24,10 @@ def _apply_default_nodes(user: User, identity: Identity) -> list:
     cfg = get_plugin_config(OBLPConfig)
     nodes = []
     role_map = {
-        "owner": cfg.default_group_owner,
-        "admin": cfg.default_group_admin,
-        "member": cfg.default_group_member,
-        "superuser": cfg.superuser_inherit,
+        "owner": cfg.oblp_default_group_owner,
+        "admin": cfg.oblp_default_group_admin,
+        "member": cfg.oblp_default_group_member,
+        "superuser": cfg.oblp_superuser_inherit,
     }
     patterns = role_map.get(identity.role, [])
     for pattern in patterns:

@@ -13,7 +13,7 @@ class PermissionCache:
     def get(cls, key: str) -> Optional[dict]:
         from nonebot import get_plugin_config
 
-        ttl = get_plugin_config(OBLPConfig).cache_ttl
+        ttl = get_plugin_config(OBLPConfig).oblp_cache_ttl
         if ttl <= 0:
             return None
         entry = cls._cache.get(key)
@@ -29,7 +29,7 @@ class PermissionCache:
     def set(cls, key: str, value: dict):
         from nonebot import get_plugin_config
 
-        ttl = get_plugin_config(OBLPConfig).cache_ttl
+        ttl = get_plugin_config(OBLPConfig).oblp_cache_ttl
         if ttl <= 0:
             return
         cls._cache[key] = (time.time(), value)
